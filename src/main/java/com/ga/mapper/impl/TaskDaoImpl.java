@@ -3,7 +3,6 @@
  */
 package com.ga.mapper.impl;
 
-import java.sql.PreparedStatement;
 import java.util.Iterator;
 import java.util.List;
 
@@ -21,9 +20,9 @@ import com.ga.persistence.entity.User;
  */
 public class TaskDaoImpl implements TaskDao {
 
-    private static String SQL_INSERT_AssignedUsers = "Insert into AssignTable(Task_Id,User_Id) values(?,?)";
-
-    
+	private static String SQL_FIND_BY_USERID = "SELECT u FROM User u WHERE u.userId = :userId";
+	private static String SQL_FIND_TASKS_BY_USERID = "FROM Task WHERE taskId IN (SELECT assignTaskId FROM Assigntask WHERE assignUserId.userId = :userId) Order By createdDate Desc ";
+	
     /*return list of tasks*/
     /* (non-Javadoc)
      * @see com.ga.mapper.TaskDao#getAllTasks()
@@ -34,7 +33,7 @@ public class TaskDaoImpl implements TaskDao {
         session.beginTransaction();
         Query query = session.getNamedQuery("Task.findAll");
         List<Task> listTask = query.list();
-
+        
         return listTask;
     }
 
@@ -43,34 +42,42 @@ public class TaskDaoImpl implements TaskDao {
      * @see com.ga.mapper.TaskDao#addTask(com.ga.persistence.entity.Task)
      */
     @Override
-    public void addTask(Task task,List<User> assignedUserList) {
-        Session session =  HibernateUtil.getSessionFactory().openSession();
-        session.beginTransaction();
-        
-        session.save(task);
-        
-        for(int i=0;i<assignedUserList.size();i++){
+	public void addTask(Task task, List<User> assignedUserList) {
+		Session session = HibernateUtil.getSessionFactory().openSession();
+		session.beginTransaction();
+
+		session.saveOrUpdate(task);
+
+		for (int i = 0; i < assignedUserList.size();i++){
             Assigntask assigntask = new Assigntask();
-            User user = assignedUserList.get(i);
-            assigntask.setAssignUserId(user);
-            assigntask.setAssignTaskId(new Task(task.getTaskId()));
-            session.save(assigntask);
-        }
-        
+            assigntask.setAssignUserId(assignedUserList.get(i));
+            //assigntask.setAssignTaskId(new Task(task.getTaskId()));
+            assigntask.setAssignTaskId(task);
+            session.saveOrUpdate(assigntask);
+            System.out.println("assign task add");            
+        }        
         session.getTransaction().commit();
         session.close();
     }
 
     
+    /* (non-Javadoc)
+     * @see com.ga.mapper.TaskDao#getUserList(int)
+     */
     public User getUserList(int user_id){
-        
+        System.out.println("in getUserList() "+user_id);
         Session session =  HibernateUtil.getSessionFactory().openSession();
         session.beginTransaction();
         
-        Query query = session.getNamedQuery("User.findByUserId");
+        Query query = session.createQuery(SQL_FIND_BY_USERID);
         query.setParameter("userId",user_id);
-        User user = (User) query.list().get(0);
-        return user;
+        List<User> userList = query.list();
+        System.out.println("size :"+userList.size());
+        for(User user : userList){
+        	System.out.println("user :"+user.toString());
+        }
+        
+        return userList.get(0);
     }
     /*display task details*/
     /* (non-Javadoc)
@@ -94,6 +101,9 @@ public class TaskDaoImpl implements TaskDao {
         return task;
     }
     
+    /* (non-Javadoc)
+     * @see com.ga.mapper.TaskDao#getUsers()
+     */
     public List<User> getUsers(){
 
            Session session = HibernateUtil.getSessionFactory().openSession();
@@ -103,5 +113,16 @@ public class TaskDaoImpl implements TaskDao {
            List<User> userList = query.list();
            return userList;
     }
+
+	@Override
+	public List<Task> getAllTasks(int user_id) {
+		Session session = HibernateUtil.getSessionFactory().openSession();
+        session.beginTransaction();
+        Query query = session.createQuery(SQL_FIND_TASKS_BY_USERID);
+        query.setParameter("userId", user_id);
+        List<Task> listTask = query.list();
+
+        return listTask;
+	}
 
 }

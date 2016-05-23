@@ -14,88 +14,145 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.apache.log4j.Logger;
+
+import com.ga.common.ErrorCodes;
+import com.ga.exception.GAException;
 import com.ga.persistence.entity.Permission;
 import com.ga.persistence.entity.User;
+import com.ga.repository.LoginService;
 import com.ga.repository.impl.LoginServiceImpl;
 
+/**
+ * The Class LoginController.
+ */
 public class LoginController extends HttpServlet {
-    private static final long serialVersionUID = 1L;
-       
-    public LoginController() {
-        super();
-        
-    }
 
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        doProcess(request, response);
-    }
+	/** The Constant serialVersionUID. */
+	private static final long serialVersionUID = 1L;
+	private LoginService loginService;
 
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {          
-        System.out.println("do post");
-        doProcess(request, response);
-    }
-    
-    private void doProcess(HttpServletRequest request,
-    HttpServletResponse response) throws ServletException, IOException {
-        if(request.getParameter("action").equalsIgnoreCase("login")){
-            try {
-                checkLogin(request, response);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+	/**
+	 * Instantiates a new login controller.
+	 */
+	public LoginController() {
+		super();
 
-}
-    
-    public void checkLogin(HttpServletRequest request,HttpServletResponse response) throws ClassNotFoundException, SQLException, ServletException, IOException{
-        
-        RequestDispatcher rd = null;
-        User user = new User();
-        user.setUserName(request.getParameter("username"));
-        user.setPassword(request.getParameter("password"));
-        
-        LoginServiceImpl loginService = new LoginServiceImpl();
-        User user1 = loginService.getLogin(user);
-        ArrayList<Permission> permissionList;
-        
-        try{
-            permissionList = (ArrayList<Permission>) loginService.getPermission(user1.getRoleId().getRoleId());
-            rd = request.getRequestDispatcher("/jsp/Home.jsp");
-            request.setAttribute("Permissions", permissionList);
-            HttpSession session = request.getSession();
-            session.setAttribute("Permissions", permissionList);
-            session.setAttribute("User", user1.getUserId());
-            session.setAttribute("UserName", user1.getUserName());
-            
-        }catch(Exception e){
-            System.out.println("null");
-            rd = request.getRequestDispatcher("index.jsp");
-        }
-       
-        rd.forward(request, response);
-        
-        /*if(rs.next()){
-            ResultSet rs1 = new LoginDao().getPermission(rs.getInt("Role_Id")); 
-            
-            ArrayList<Role_Permission> permissions = new ArrayList<Role_Permission>();
-            
-            while(rs1.next()){
-                Role_Permission rp = new Role_Permission();
-                rp.setPermission_Id(rs1.getInt("Permission_Id"));
-                rp.setPermission_Name(rs1.getString("PermissionName"));
-                rp.setAction(rs1.getString("Action"));
-                permissions.add(rp);
-            }
-            
-            HttpSession session = request.getSession();
-            session.setAttribute("Permissions", permissions);
-            session.setAttribute("User", rs.getInt("User_Id"));
-            session.setAttribute("UserName", rs.getString("UserName"));
-            
-            RequestDispatcher rd = request.getRequestDispatcher("/jsp/HomeJsp.jsp");
-            rd.forward(request, response);
-        }else{
-            
-        }*/
-    }
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest
+	 * , javax.servlet.http.HttpServletResponse)
+	 */
+	protected void doGet(HttpServletRequest request,
+			HttpServletResponse response) throws ServletException, IOException {
+		doProcess(request, response);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest
+	 * , javax.servlet.http.HttpServletResponse)
+	 */
+	protected void doPost(HttpServletRequest request,
+			HttpServletResponse response) throws ServletException, IOException {
+		System.out.println("do post");
+		doProcess(request, response);
+	}
+
+	/**
+	 * Do process.
+	 * 
+	 * @param request
+	 *            the request
+	 * @param response
+	 *            the response
+	 * @throws ServletException
+	 *             the servlet exception
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 */
+	private void doProcess(HttpServletRequest request,
+			HttpServletResponse response) throws ServletException, IOException {
+		if (request.getParameter("action").equalsIgnoreCase("login")) {
+			try {
+				checkLogin(request, response);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} else if (request.getParameter("action").equalsIgnoreCase("logout")) {
+			
+			HttpSession session = request.getSession();
+			session.setAttribute("UserName", null);
+			RequestDispatcher rd = request.getRequestDispatcher("index.jsp");
+			rd.forward(request, response);
+		}
+
+	}
+
+	/**
+	 * Check login.
+	 * 
+	 * @param request
+	 *            the request
+	 * @param response
+	 *            the response
+	 * @throws ClassNotFoundException
+	 *             the class not found exception
+	 * @throws SQLException
+	 *             the SQL exception
+	 * @throws ServletException
+	 *             the servlet exception
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 */
+	public void checkLogin(HttpServletRequest request,
+			HttpServletResponse response) throws ClassNotFoundException,
+			SQLException, ServletException, IOException {
+
+		RequestDispatcher rd = null;
+		User user = new User();
+		user.setUserName(request.getParameter("username"));
+		user.setPassword(request.getParameter("password"));
+
+		loginService = new LoginServiceImpl();
+		User user1 = null;
+		try {
+			user1 = loginService.getLogin(user);
+		} catch (GAException e) {
+
+			if (e.getCode() == ErrorCodes.GA_AUTH_FAILED.getErrorCode()) {
+				System.out.println(e.getCode());
+				request.setAttribute("LoginMsg", "Wrong user name or password");
+				rd = request.getRequestDispatcher("index.jsp");
+				rd.forward(request, response);
+			}
+		}
+
+		ArrayList<Permission> permissionList = new ArrayList<Permission>();
+
+		try {
+
+			permissionList = (ArrayList<Permission>) loginService.getPermission(user1.getRoleId().getRoleId());
+			System.out.println("permission size :: " + permissionList.size());
+			rd = request.getRequestDispatcher("/TaskController?action=displayTask");
+			request.setAttribute("Permissions", permissionList);
+			HttpSession session = request.getSession();
+			session.setAttribute("Permissions", permissionList);
+			session.setAttribute("User", user1.getUserId());
+			session.setAttribute("UserName", user1.getUserName());
+			session.setAttribute("UserRoleId", user1.getRoleId().getRoleId());
+			rd.forward(request, response);
+			
+		} catch (NullPointerException e) {
+			Logger logger = Logger.getLogger("TaskController");
+			logger.info("Permissions Not Found");
+		} 
+
+	}
 }

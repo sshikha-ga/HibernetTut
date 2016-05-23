@@ -10,18 +10,30 @@ import com.ga.mapper.impl.UserDaoImpl;
 import com.ga.persistence.entity.Worklog;
 import com.ga.repository.UserService;
 
+/**
+ * The Class UserServiceImpl.
+ */
 public class UserServiceImpl implements UserService{
 
+	/** The userdao. */
+	UserDao userdao;
+	
+    /* (non-Javadoc)
+     * @see com.ga.repository.UserService#addWorkLog(com.ga.persistence.entity.Worklog)
+     */
     @Override
     public void addWorkLog(Worklog log) {
-         UserDaoImpl userdao = new UserDaoImpl();
+          userdao = new UserDaoImpl();
          userdao.addWorkLog(log);
          
     }
 
+    /* (non-Javadoc)
+     * @see com.ga.repository.UserService#getWorkLogDetails(int)
+     */
     @Override
     public List<Worklog> getWorkLogDetails(int task_id) {
-        UserDaoImpl userdao = new UserDaoImpl();
+         userdao = new UserDaoImpl();
         return userdao.getWorkLogDetails(task_id);
     }   
 

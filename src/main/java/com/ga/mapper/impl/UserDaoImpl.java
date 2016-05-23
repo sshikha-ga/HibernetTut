@@ -13,8 +13,14 @@ import com.ga.domain.util.HibernateUtil;
 import com.ga.mapper.UserDao;
 import com.ga.persistence.entity.Worklog;
 
+/**
+ * The Class UserDaoImpl.
+ */
 public class UserDaoImpl implements UserDao{
 
+    /* (non-Javadoc)
+     * @see com.ga.mapper.UserDao#addWorkLog(com.ga.persistence.entity.Worklog)
+     */
     @Override
     public void addWorkLog(Worklog log) {
         Session session =  HibernateUtil.getSessionFactory().openSession();
@@ -24,6 +30,9 @@ public class UserDaoImpl implements UserDao{
         session.close();
     }
     
+    /* (non-Javadoc)
+     * @see com.ga.mapper.UserDao#getWorkLogDetails(int)
+     */
     public List<Worklog> getWorkLogDetails(int task_id){
        
         Session session =  HibernateUtil.getSessionFactory().openSession();

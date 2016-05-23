@@ -24,6 +24,7 @@ public interface TaskDao {
      * Adds the task.
      *
      * @param task the task
+     * @param assignedUserList the assigned user list
      */
     void addTask(Task task,List<User> assignedUserList);
     
@@ -35,7 +36,19 @@ public interface TaskDao {
      */
     Task getTaskDetails(int task_id);
     
-    public List<User> getUsers();
+    /**
+     * Gets the users.
+     *
+     * @return the users
+     */
+     List<User> getUsers();
     
-    public User getUserList(int user_id);
+    /**
+     * Gets the user list.
+     *
+     * @param user_id the user_id
+     * @return the user list
+     */
+     User getUserList(int user_id);
+     List<Task> getAllTasks(int user_id);
 }

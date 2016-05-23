@@ -6,7 +6,6 @@
 package com.ga.persistence.entity;
 
 import java.io.Serializable;
-import java.util.Date;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -20,8 +19,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -37,10 +34,16 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Worklog.findByWorkLogTaskId", query = "SELECT w FROM Worklog w WHERE w.taskId.taskId = :taskId"),
     @NamedQuery(name = "Worklog.findByCreatedDate", query = "SELECT w FROM Worklog w WHERE w.createdDate = :createdDate")})
 public class Worklog implements Serializable {
+    @Lob
+    @Column(name = "TotalDays")
+    private String totalDays;
+    @Lob
+    @Column(name = "CreatedDate")
+    private String createdDate;
     private static final long serialVersionUID = 1L;
     @Id
-    //@Basic(optional = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+   // @Basic(optional = false)
+    @GeneratedValue(strategy=GenerationType.IDENTITY)
     @Column(name = "WorkLog_Id")
     private Integer workLogId;
     @Lob
@@ -52,10 +55,6 @@ public class Worklog implements Serializable {
     @Lob
     @Column(name = "TotalMinutes")
     private String totalMinutes;
-   
-    @Column(name = "CreatedDate")
-    private String createdDate;
-    
     @JoinColumn(name = "Task_Id", referencedColumnName = "Task_Id")
     @ManyToOne
     private Task taskId;
@@ -102,13 +101,6 @@ public class Worklog implements Serializable {
         this.totalMinutes = totalMinutes;
     }
 
-    public String getCreatedDate() {
-        return createdDate;
-    }
-
-    public void setCreatedDate(String createdDate) {
-        this.createdDate = createdDate;
-    }
 
     public Task getTaskId() {
         return taskId;
@@ -148,9 +140,23 @@ public class Worklog implements Serializable {
 
     @Override
     public String toString() {
-        return "Worklog [workLogId=" + workLogId + ", startTime=" + startTime + ", totalHours=" + totalHours
-                + ", totalMinutes=" + totalMinutes + ", createdDate=" + createdDate + ", taskId=" + taskId
-                + ", userId=" + userId + "]";
+        return "com.toy.anagrams.lib.Worklog[ workLogId=" + workLogId + " ]";
+    }
+
+    public String getTotalDays() {
+        return totalDays;
+    }
+
+    public void setTotalDays(String totalDays) {
+        this.totalDays = totalDays;
+    }
+
+    public String getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(String createdDate) {
+        this.createdDate = createdDate;
     }
     
 }
